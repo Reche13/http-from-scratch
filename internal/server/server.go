@@ -34,6 +34,27 @@ func (s *Server) ListenAndServe() error {
 			return fmt.Errorf("connection accepting error: %w", err)
 		}
 
-		conn.Write([]byte("hello from http server"))
+		go s.handleConn(conn)
 	}
+}
+
+func (s *Server) handleConn(conn net.Conn) {
+	defer conn.Close()
+
+	buf := make([]byte, 1024)
+
+	_, err := conn.Read(buf)
+	if err != nil {
+		fmt.Printf("Error reading connection: %v", err)
+		return
+	}
+
+	resp := "HTTP/1.1 200 OK\r\n" +
+	"Content-Length: 23\r\n" +
+	"Content-Type: text/plain\r\n" +
+	"Connection: close\r\n\r\n" +
+	"Hello from http server\n"
+
+	conn.Write([]byte(resp))
+
 }
