@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/reche13/http-from-scratch/internal/request"
 )
 
 type Server struct {
@@ -52,19 +54,18 @@ func (s *Server) ListenAndServe() error {
 func (s *Server) handleConn(conn net.Conn) {
 	defer conn.Close()
 
-	buf := make([]byte, 1024)
-
-	_, err := conn.Read(buf)
+	r, err := request.ReadRequest(conn)
 	if err != nil {
-		fmt.Printf("Error reading connection: %v", err)
-		return
+		log.Printf("failed to read: %v", err)
 	}
 
+	body := fmt.Sprintf("method: %s, http-version: %s, path: %s", r.RequestLine.Method, r.RequestLine.HttpVersion, r.RequestLine.Path )
+
 	resp := "HTTP/1.1 200 OK\r\n" +
-	"Content-Length: 23\r\n" +
+	fmt.Sprintf("Content-Length: %d\r\n", len(body) + 1) +
 	"Content-Type: text/plain\r\n" +
 	"Connection: close\r\n\r\n" +
-	"Hello from http server\n"
+	fmt.Sprintf("%s\n", body)
 
 	conn.Write([]byte(resp))
 }
