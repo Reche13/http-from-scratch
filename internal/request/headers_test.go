@@ -17,12 +17,12 @@ func TestHeadersParse(t *testing.T) {
 	}{
 		{
 			name: "simple headers",
-            input: "Host: example.com\r\nUser-Agent: curl\r\n\r\n",
+            input: "Host: localhost:6969\r\nUser-Agent: curl\r\n\r\n",
             wantHeaders: map[string]string{
-                "host":        "example.com",
+                "host":        "localhost:6969",
                 "user-agent":  "curl",
             },
-            wantRead:  len("Host: example.com\r\nUser-Agent: curl\r\n\r\n"),
+            wantRead:  len("Host: localhost:6969\r\nUser-Agent: curl\r\n\r\n"),
             wantDone: true,
             wantErr:  false,
 		},
@@ -44,6 +44,13 @@ func TestHeadersParse(t *testing.T) {
             wantRead: 0,
             wantHeaders: map[string]string{},
         },
+		{
+			name: "invalid token chars",
+			input: "H©st: example.com\r\n\r\n",
+			wantDone: false,
+			wantRead: 0,
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {

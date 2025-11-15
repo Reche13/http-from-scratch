@@ -27,6 +27,22 @@ func (h *Headers) Get(name string) string {
 	return h.Headers[strings.ToLower(name)]
 }
 
+func isValidToken(str []byte) bool {
+	for _, ch := range str {
+		if (ch >= 'A' && ch <= 'Z') ||
+           (ch >= 'a' && ch <= 'z') ||
+           (ch >= '0' && ch <= '9') {
+            continue
+        }
+        switch ch {
+        case '!', '#', '$', '%', '&', '\'', '*', '+', '-', '.', '^', '_', '`', '|', '~':
+            continue
+        }
+        return false
+	}
+	return true
+}
+
 func parseHeader(data []byte) (string, string, error) {
 	parts := bytes.SplitN(data, []byte(":"), 2)
 	if len(parts) != 2 {
@@ -36,7 +52,7 @@ func parseHeader(data []byte) (string, string, error) {
 	name := parts[0]
 	value := bytes.TrimSpace(parts[1])
 
-	if bytes.HasSuffix(name, []byte(" ")) {
+	if bytes.HasSuffix(name, []byte(" ")) || !isValidToken(name) {
 		return "", "", ERROR_MALFORMED_FIELD_NAME
 	}
 
