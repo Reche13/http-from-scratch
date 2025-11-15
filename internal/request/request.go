@@ -6,17 +6,19 @@ import (
 	"io"
 )
 
-type parserState string
+type ParserState string
 
 const (
-	StateInit parserState = "init"
-	StateDone parserState = "done"
-	StateError parserState = "error"
+	StateInit ParserState = "init"
+	StateHeaders ParserState = "headers"
+	StateDone ParserState = "done"
+	StateError ParserState = "error"
 )
 
 type Request struct {
 	RequestLine RequestLine
-	state parserState
+	Headers *Headers
+	state ParserState
 }
 
 type RequestLine struct {
@@ -34,6 +36,7 @@ var SEPARATOR = []byte("\r\n")
 func newRequest() *Request {
 	return &Request{
 		state: StateInit,
+		Headers: NewHeaders(),
 	}
 }
 
@@ -46,11 +49,13 @@ func (r *Request) parse(data []byte) (int, error) {
 
 	outer:
 	for {
+		currentData := data[read:]
 		switch r.state {
 		case StateError:
 			return 0, ERROR_REQUEST_IN_ERROR_STATE
+
 		case StateInit:
-			rl, n, err := parseRequestLine(data)
+			rl, n, err := parseRequestLine(currentData)
 			if err != nil {
 				r.state = StateError
 				return 0, err
@@ -60,11 +65,26 @@ func (r *Request) parse(data []byte) (int, error) {
 			}
 			r.RequestLine = *rl
 			read += n
-			r.state = StateDone
+			r.state = StateHeaders
+
+		case StateHeaders:
+			n, done, err := r.Headers.Parse(currentData)
+			if err != nil {
+				return 0, err
+			}
+			if n == 0 {
+				break outer
+			}
+			read += n
+
+			if done {
+				r.state = StateDone
+			}
 		case StateDone:
 			break outer 
+
 		default:
-			break outer
+			panic("Bad code bro")
 		}
 	}
 
