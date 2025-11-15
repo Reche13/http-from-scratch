@@ -51,6 +51,16 @@ func TestHeadersParse(t *testing.T) {
 			wantRead: 0,
 			wantErr: true,
 		},
+		{
+			name: "multiple values",
+			input: "Host: example.com\r\nHost: localhost:6969\r\n",
+			wantRead: len("Host: example.com\r\nHost: localhost:6969\r\n"),
+			wantDone: false,
+			wantErr: false,
+			wantHeaders: map[string]string{
+				"host": "example.com,localhost:6969",
+			},
+		},
 	}
 
 	for _, tt := range tests {

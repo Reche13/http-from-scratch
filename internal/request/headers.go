@@ -20,7 +20,12 @@ var ERROR_MALFORMED_FIELD_LINE = fmt.Errorf("malformed field-line")
 var ERROR_MALFORMED_FIELD_NAME = fmt.Errorf("malformed field-name")
 
 func (h *Headers) Set(name, value string) {
-	h.Headers[strings.ToLower(name)] = value
+	name = strings.ToLower(name)
+	if v, ok := h.Headers[name]; ok {
+		h.Headers[name] = fmt.Sprintf("%s,%s", v, value)
+	} else {
+		h.Headers[name] = value
+	}
 }
 
 func (h *Headers) Get(name string) string {
