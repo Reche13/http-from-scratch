@@ -7,12 +7,12 @@ import (
 )
 
 type Headers struct {
-	headers map[string]string
+	Headers map[string]string
 }
 
 func NewHeaders() *Headers {
 	return &Headers{
-		headers: make(map[string]string),
+		Headers: make(map[string]string),
 	}
 }
 
@@ -20,11 +20,11 @@ var ERROR_MALFORMED_FIELD_LINE = fmt.Errorf("malformed field-line")
 var ERROR_MALFORMED_FIELD_NAME = fmt.Errorf("malformed field-name")
 
 func (h *Headers) Set(name, value string) {
-	h.headers[strings.ToLower(name)] = value
+	h.Headers[strings.ToLower(name)] = value
 }
 
 func (h *Headers) Get(name string) string {
-	return h.headers[strings.ToLower(name)]
+	return h.Headers[strings.ToLower(name)]
 }
 
 func parseHeader(data []byte) (string, string, error) {
@@ -49,7 +49,7 @@ func (h *Headers) Parse(data []byte) (int, bool, error) {
 	done := false
 
 	for {
-		idx := bytes.Index(data, []byte(SEPARATOR))
+		idx := bytes.Index(data[read:], []byte(SEPARATOR))
 
 		if idx == -1 {
 			break
@@ -66,7 +66,7 @@ func (h *Headers) Parse(data []byte) (int, bool, error) {
 			return 0, false, err
 		}
 
-		idx += read + len(SEPARATOR)
+		read += idx + len(SEPARATOR)
 		h.Set(name, value)
 	}
 
