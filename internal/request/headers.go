@@ -7,12 +7,12 @@ import (
 )
 
 type Headers struct {
-	Headers map[string]string
+	headers map[string]string
 }
 
 func NewHeaders() *Headers {
 	return &Headers{
-		Headers: make(map[string]string),
+		headers: make(map[string]string),
 	}
 }
 
@@ -21,15 +21,21 @@ var ERROR_MALFORMED_FIELD_NAME = fmt.Errorf("malformed field-name")
 
 func (h *Headers) Set(name, value string) {
 	name = strings.ToLower(name)
-	if v, ok := h.Headers[name]; ok {
-		h.Headers[name] = fmt.Sprintf("%s,%s", v, value)
+	if v, ok := h.headers[name]; ok {
+		h.headers[name] = fmt.Sprintf("%s,%s", v, value)
 	} else {
-		h.Headers[name] = value
+		h.headers[name] = value
 	}
 }
 
 func (h *Headers) Get(name string) string {
-	return h.Headers[strings.ToLower(name)]
+	return h.headers[strings.ToLower(name)]
+}
+
+func (h *Headers) ForEach(cb func(n, v string)) {
+	for k, v := range h.headers {
+		cb(k, v)
+	}
 }
 
 func isValidToken(str []byte) bool {

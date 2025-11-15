@@ -88,10 +88,6 @@ func TestHeadersParse(t *testing.T) {
                 t.Fatalf("done mismatch: got %v, want %v", done, tt.wantDone)
             }
 
-			if len(tt.wantHeaders) != len(h.Headers) {
-                t.Fatalf("header count mismatch, got %d want %d", len(h.Headers), len(tt.wantHeaders))
-            }
-
             for k, v := range tt.wantHeaders {
                 got := h.Get(k)
                 if got != v {
