@@ -67,6 +67,8 @@ func (s *Server) handleConn(conn net.Conn) {
 	r.Headers.ForEach(func(n, v string){
 		fmt.Printf("%s: %s\n", n, v)
 	}) 
+	fmt.Printf("\n-Body\n")
+	fmt.Printf("%s\n", r.Body)
 
 
 	body := fmt.Sprintf("method: %s, http-version: %s, path: %s", r.RequestLine.Method, r.RequestLine.HttpVersion, r.RequestLine.Path )

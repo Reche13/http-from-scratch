@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strconv"
 )
 
 type ParserState string
@@ -11,6 +12,7 @@ type ParserState string
 const (
 	StateInit ParserState = "init"
 	StateHeaders ParserState = "headers"
+	StateBody ParserState = "body"
 	StateDone ParserState = "done"
 	StateError ParserState = "error"
 )
@@ -18,6 +20,7 @@ const (
 type Request struct {
 	RequestLine RequestLine
 	Headers *Headers
+	Body string
 	state ParserState
 }
 
@@ -37,7 +40,27 @@ func newRequest() *Request {
 	return &Request{
 		state: StateInit,
 		Headers: NewHeaders(),
+		Body: "",
 	}
+}
+
+func getIntHeader(h *Headers, name string, defaultvalue int) int {
+	valStr, ok := h.Get(name)
+	if !ok {
+		return defaultvalue
+	}
+
+	val, err := strconv.Atoi(valStr)
+	if err != nil {
+		return defaultvalue
+	}
+
+	return val
+}
+
+func (r *Request) hasBody() bool {
+	contentLength := getIntHeader(r.Headers, "content-length", 0)
+	return contentLength > 0
 }
 
 func (r *Request) Done() bool {
@@ -70,6 +93,7 @@ func (r *Request) parse(data []byte) (int, error) {
 		case StateHeaders:
 			n, done, err := r.Headers.Parse(currentData)
 			if err != nil {
+				r.state = StateError
 				return 0, err
 			}
 			if n == 0 {
@@ -78,8 +102,28 @@ func (r *Request) parse(data []byte) (int, error) {
 			read += n
 
 			if done {
+				if r.hasBody() {
+					r.state = StateBody
+				} else {
+					r.state = StateDone
+				}
+			}
+		
+		case StateBody:
+			contentLength := getIntHeader(r.Headers, "content-length", 0)
+			if contentLength == 0 {
+				r.state = StateDone
+				break
+			}
+
+			remaining := min(contentLength - len(r.Body), len(currentData))
+			r.Body += string(currentData[:remaining])
+			read += remaining
+
+			if len(r.Body) == contentLength {
 				r.state = StateDone
 			}
+			// body
 		case StateDone:
 			break outer 
 

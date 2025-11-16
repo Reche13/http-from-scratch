@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestReadRequest_TableDriven(t *testing.T) {
+func TestReadRequest(t *testing.T) {
 	tests := []struct {
 		name      string
 		input     string
@@ -80,11 +80,36 @@ func TestReadRequest_TableDriven(t *testing.T) {
 			}
 
 			for k, v := range tt.wantHdrs {
-				got := req.Headers.Get(k)
+				got, _ := req.Headers.Get(k)
 				if got != v {
 					t.Fatalf("header %s mismatch: got %q want %q", k, got, v)
 				}
 			}
 		})
+	}
+}
+
+
+
+func TestBody(t *testing.T) {
+	raw := "" +
+		"POST /submit HTTP/1.1\r\n" +
+		"Host: example.com\r\n" +
+		"Content-Length: 11\r\n" +
+		"\r\n" +
+		"Hello World"
+
+	r, err := ReadRequest(strings.NewReader(raw))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	expectedBody := "Hello World"
+	if r.Body != expectedBody {
+		t.Fatalf("expected body %s, got %s", expectedBody, r.Body)
+	}
+
+	if r.state != StateDone {
+		t.Fatalf("request should be done, state = %v", r.state)
 	}
 }

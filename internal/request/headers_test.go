@@ -89,7 +89,7 @@ func TestHeadersParse(t *testing.T) {
             }
 
             for k, v := range tt.wantHeaders {
-                got := h.Get(k)
+                got, _ := h.Get(k)
                 if got != v {
                     t.Fatalf("header %q mismatch: got %q want %q", k, got, v)
                 }
