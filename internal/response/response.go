@@ -14,7 +14,7 @@ type Response struct {
 type StatusCode int
 const (
 	StatusOk StatusCode = 200
-	statusBadRequest StatusCode = 400
+	StatusBadRequest StatusCode = 400
 	StatusInternalServerError StatusCode = 500
 )
 
@@ -23,7 +23,7 @@ func WriteStatusLine(w io.Writer, statusCode StatusCode) error {
 	switch statusCode {
 	case StatusOk:
 		statusLine = []byte("HTTP/1.1 200 OK\r\n")
-	case statusBadRequest:
+	case StatusBadRequest:
 		statusLine = []byte("HTTP/1.1 400 Bad Request\r\n")
 	case StatusInternalServerError:
 		statusLine = []byte("HTTP/1.1 500 Internal Server Error\r\n")

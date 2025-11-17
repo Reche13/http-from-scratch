@@ -1,7 +1,9 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -15,21 +17,31 @@ import (
 type Server struct {
 	Addr string
 	ln net.Listener
+	handler Handler
 	done chan struct{}
 }
 
-func New(Addr string) *Server {
+func New(port uint16, handler Handler ) *Server {
 	return &Server{
-		Addr: Addr,
+		Addr: fmt.Sprintf(":%d", port),
+		handler: handler,
 		done: make(chan struct{}),
 	}
 }
 
-func (s *Server) ListenAndServe() error {
+type HandlerError struct {
+	StatusCode response.StatusCode
+	Message string
+}
+
+type Handler func(w io.Writer, r *request.Request) *HandlerError
+
+
+func (s *Server) Serve() error {
 	var err error
 	s.ln, err = net.Listen("tcp", s.Addr)
 	if err != nil {
-		return fmt.Errorf("listener error: %w", err)
+		return  err
 	}
 
 	log.Printf("listening on %s", s.Addr)
@@ -55,26 +67,32 @@ func (s *Server) ListenAndServe() error {
 func (s *Server) handleConn(conn net.Conn) {
 	defer conn.Close()
 
+	headers := response.GetDefaultHeaders(0)
 	r, err := request.ReadRequest(conn)
 	if err != nil {
-		log.Printf("failed to read: %v", err)
+		response.WriteStatusLine(conn, response.StatusBadRequest)
+		response.WriteHeaders(conn, headers)
+		return
 	}
 
-	fmt.Printf("-Request\n")
-	fmt.Printf("-Method: %s\n", r.RequestLine.Method)
-	fmt.Printf("-Path: %s\n", r.RequestLine.Path)
-	fmt.Printf("-Version: %s\n\n", r.RequestLine.HttpVersion)
-	fmt.Printf("-Headers\n")
-	r.Headers.ForEach(func(n, v string){
-		fmt.Printf("%s: %s\n", n, v)
-	}) 
-	fmt.Printf("\n-Body\n")
-	fmt.Printf("%s\n", r.Body)
+	writer := bytes.NewBuffer([]byte{})
+	handlerError := s.handler(writer, r)
+	
+	var body []byte = nil
+	var status response.StatusCode = response.StatusOk
 
+	if handlerError != nil {
+		status = handlerError.StatusCode
+		body = []byte(handlerError.Message)
+	} else {
+		body = writer.Bytes()
+	}
 
-	headers := response.GetDefaultHeaders(0)
-	response.WriteStatusLine(conn, response.StatusOk)
+	headers.Replace("Content-Length", fmt.Sprintf("%d", len(body)))
+
+	response.WriteStatusLine(conn, status)
 	response.WriteHeaders(conn, headers)
+	conn.Write(body)
 }
 
 func (s *Server) Close() {
