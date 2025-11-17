@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/reche13/http-from-scratch/internal/request"
+	"github.com/reche13/http-from-scratch/internal/headers"
 )
 
 type Response struct {
@@ -36,15 +36,15 @@ func WriteStatusLine(w io.Writer, statusCode StatusCode) error {
 }
 
 
-func GetDefaultHeaders(contentLen int) *request.Headers {
-	h := request.NewHeaders()
+func GetDefaultHeaders(contentLen int) *headers.Headers {
+	h := headers.NewHeaders()
 	h.Set("Content-length", fmt.Sprintf("%d",contentLen))
 	h.Set("Connection", "close")
 	h.Set("Content-Type", "text/plain")
 	return h
 }
 
-func WriteHeaders(w io.Writer, headers *request.Headers) error {
+func WriteHeaders(w io.Writer, headers *headers.Headers) error {
 	b := []byte{}
 	headers.ForEach(func(n, v string) {
 		b = fmt.Appendf(b, "%s: %s\r\n", n, v)

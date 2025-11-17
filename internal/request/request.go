@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+
+	"github.com/reche13/http-from-scratch/internal/headers"
 )
 
 type ParserState string
@@ -19,7 +21,7 @@ const (
 
 type Request struct {
 	RequestLine RequestLine
-	Headers *Headers
+	Headers *headers.Headers
 	Body string
 	state ParserState
 }
@@ -39,12 +41,12 @@ var SEPARATOR = []byte("\r\n")
 func newRequest() *Request {
 	return &Request{
 		state: StateInit,
-		Headers: NewHeaders(),
+		Headers: headers.NewHeaders(),
 		Body: "",
 	}
 }
 
-func getIntHeader(h *Headers, name string, defaultvalue int) int {
+func getIntHeader(h *headers.Headers, name string, defaultvalue int) int {
 	valStr, ok := h.Get(name)
 	if !ok {
 		return defaultvalue

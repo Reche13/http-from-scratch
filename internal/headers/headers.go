@@ -1,4 +1,4 @@
-package request
+package headers
 
 import (
 	"bytes"
@@ -15,6 +15,8 @@ func NewHeaders() *Headers {
 		headers: make(map[string]string),
 	}
 }
+
+var SEPARATOR = "\r\n"
 
 var ERROR_MALFORMED_FIELD_LINE = fmt.Errorf("malformed field-line")
 var ERROR_MALFORMED_FIELD_NAME = fmt.Errorf("malformed field-name")
