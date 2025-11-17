@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/reche13/http-from-scratch/internal/request"
+	"github.com/reche13/http-from-scratch/internal/response"
 )
 
 type Server struct {
@@ -71,15 +72,9 @@ func (s *Server) handleConn(conn net.Conn) {
 	fmt.Printf("%s\n", r.Body)
 
 
-	body := fmt.Sprintf("method: %s, http-version: %s, path: %s", r.RequestLine.Method, r.RequestLine.HttpVersion, r.RequestLine.Path )
-
-	resp := "HTTP/1.1 200 OK\r\n" +
-	fmt.Sprintf("Content-Length: %d\r\n", len(body) + 1) +
-	"Content-Type: text/plain\r\n" +
-	"Connection: close\r\n\r\n" +
-	fmt.Sprintf("%s\n", body)
-
-	conn.Write([]byte(resp))
+	headers := response.GetDefaultHeaders(0)
+	response.WriteStatusLine(conn, response.StatusOk)
+	response.WriteHeaders(conn, headers)
 }
 
 func (s *Server) Close() {

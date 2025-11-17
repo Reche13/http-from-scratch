@@ -28,6 +28,11 @@ func (h *Headers) Set(name, value string) {
 	}
 }
 
+func (h *Headers) Replace(name, value string) {
+	name = strings.ToLower(name)
+	h.headers[name] = value
+}
+
 func (h *Headers) Get(name string) (string, bool) {
 	val, ok := h.headers[strings.ToLower(name)]
 	return val, ok
