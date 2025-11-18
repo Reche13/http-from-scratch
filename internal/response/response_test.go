@@ -24,6 +24,11 @@ func TestWriteStatusLine(t *testing.T) {
 			want:       "HTTP/1.1 400 Bad Request\r\n",
 		},
 		{
+			name:       "404 Not Found",
+			statusCode: StatusNotFound,
+			want:       "HTTP/1.1 404 Not Found\r\n",
+		},
+		{
 			name:       "500 Internal Server Error",
 			statusCode: StatusInternalServerError,
 			want:       "HTTP/1.1 500 Internal Server Error\r\n",
