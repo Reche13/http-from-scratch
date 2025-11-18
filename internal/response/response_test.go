@@ -105,3 +105,46 @@ func TestGetDefaultHeaders(t *testing.T) {
 	}
 }
 
+func TestChunkedResponse(t *testing.T) {
+	var buf bytes.Buffer
+	w := NewWriter(&buf)
+
+	h := GetDefaultHeadersChunked()
+	w.EnableChunkedEncoding(h)
+
+	// Write status line
+	err := w.WriteStatusLine(StatusOk)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Write headers
+	err = w.WriteHeaders(h)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Write chunks
+	_, err = w.WriteChunk([]byte("Hello"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	_, err = w.WriteChunk([]byte(" World"))
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Finalize
+	err = w.FinalizeChunkedEncoding()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	output := buf.String()
+	expected := "HTTP/1.1 200 OK\r\ntransfer-encoding: chunked\r\nconnection: close\r\ncontent-type: text/plain\r\n\r\n5\r\nHello\r\n6\r\n World\r\n0\r\n\r\n"
+	if output != expected {
+		t.Fatalf("got %q, want %q", output, expected)
+	}
+}
+

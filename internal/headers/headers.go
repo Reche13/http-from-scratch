@@ -40,6 +40,11 @@ func (h *Headers) Get(name string) (string, bool) {
 	return val, ok
 }
 
+func (h *Headers) Remove(name string) {
+	name = strings.ToLower(name)
+	delete(h.headers, name)
+}
+
 func (h *Headers) ForEach(cb func(n, v string)) {
 	for k, v := range h.headers {
 		cb(k, v)
